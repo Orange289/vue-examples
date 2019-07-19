@@ -80,6 +80,8 @@
         rate: null,
         sourceValue: null,
         resultValue: null,
+        bridgeData: '/en/clientsarea/rest/bridge-data/',
+        crossrateData: '/en/clientsarea/rest/bridge-data/crossrate/'
       }
     },
     filters: {
@@ -105,12 +107,11 @@
     },
     mounted() {
       let _self = this;
-      let bridgeData = 'https://stage.gozo.pro/en/clientsarea/rest/bridge-data/';
       let source = this.sourceValue;
       let result = this.resultValue;
 
       axios
-        .get(bridgeData)
+        .get(_self.bridgeData)
         .then(function(response) {
           let currencies = response.data.data.currencies;
 
@@ -129,18 +130,14 @@
 
         this.sourceValue = null;
         this.resultValue = null;
-
-        // convInputSource.style.width='2ch';
-        // convInputResult.style.width='2ch';
       },
       setRate() {
         let _self = this;
         let source = this.config.source;
         let result = this.config.result;
-        let crossrateData = 'https://gozo.pro/en/clientsarea/rest/bridge-data/crossrate/';
 
         axios
-          .get(`${crossrateData}${source}/${result}/`)
+          .get(`${_self.crossrateData}${source}/${result}/`)
           .then(function(response){
             _self.rate = response.data.data.rate;
           });
@@ -154,14 +151,13 @@
         }
       },
       calculateFromApi(from, to, x, y, ev) {
-        const crossrateData = 'https://gozo.pro/en/clientsarea/rest/bridge-data/crossrate/';
         let rate;
         let rateDecimals;
         let _self = this;
         let formatFilter = _self.$options.filters.formatNumber;
 
         axios
-          .get(`${crossrateData}${from}/${to}/`)
+          .get(`${_self.crossrateData}${from}/${to}/`)
           .then(function(response){
             rate = response.data.data.rate;
             rateDecimals = _self.getDecimalsNumber(rate);
@@ -190,7 +186,6 @@
           })
       },
       convertValues(from, to, ev) {
-        const crossrateData = 'https://gozo.pro/en/clientsarea/rest/bridge-data/crossrate/';
         let _self = this;
 
         if (from === this.config.source) {
@@ -202,10 +197,12 @@
       inputSource() {
         this.setRate();
         this.convertValues(this.config.source, this.config.result, this.$refs.converterInputSource);
+        this.sourceValue = this.$refs.sourceValueFormatted.getAttribute('value');
       },
       inputResult() {
         this.setRate();
         this.convertValues(this.config.result, this.config.source, this.$refs.converterInputResult);
+        this.resultValue = this.$refs.resultValueFormatted.getAttribute('value');
       },
       onReplace(e) {
         e.preventDefault();
@@ -388,14 +385,9 @@
   justify-content: space-between;
   padding-bottom: 50px;
 
-  @include bp(tablet) {
-    // padding-bottom: 0;
-  }
-
   @include bp(desktop) {
     width: 834px;
     margin: auto;
-    // margin-bottom: 50px;
     justify-content: space-between;
   }
 }
@@ -403,12 +395,6 @@
 .converter__input {
   margin-bottom: 15px;
   border-bottom: 2px solid $color__blue;
-
-  // @include bp(0 desktop) {
-  //   input {
-  //     width: 100% !important;
-  //   }
-  // }
 
   input {
     font-size: 20px;
